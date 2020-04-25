@@ -1,6 +1,5 @@
-package com.example.countdownproject.ui.home;
+package com.example.countdownproject.ui.game;
 
-import android.app.Application;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,36 +7,36 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.countdownproject.R;
 
-public class HomeFragment extends Fragment {
+public class GameFragment extends Fragment {
 
-    private HomeViewModel homeViewModel;
+    private GameViewModel gameViewModel;
     private TextView counterTextView;
     private Button start_stop_button;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_home, container, false);
+        View root = inflater.inflate(R.layout.fragment_game, container, false);
 
-        homeViewModel = ViewModelProviders.of(this, new HomeViewModelFactory(getContext(), root)).get(HomeViewModel.class);
+        gameViewModel = ViewModelProviders.of(this, new GameViewModelFactory(getContext(), root)).get(GameViewModel.class);
 
         counterTextView = root.findViewById(R.id.counter_text);
         start_stop_button = root.findViewById(R.id.start_stop_button);
 
-        homeViewModel.getCounterText().observe(this, new Observer<String>() {
+        gameViewModel.getCounterText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 counterTextView.setText(s);
             }
         });
-        homeViewModel.getButtonText().observe(this, new Observer<String>() {
+        gameViewModel.getButtonText().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
                 start_stop_button.setText(s);
@@ -47,10 +46,9 @@ public class HomeFragment extends Fragment {
         start_stop_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                homeViewModel.StartStop();
+                gameViewModel.HandleStop_StartButton_Clicked();
             }
         });
-
         return root;
     }
 }

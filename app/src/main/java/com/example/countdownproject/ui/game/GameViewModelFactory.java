@@ -1,20 +1,18 @@
-package com.example.countdownproject.ui.home;
+package com.example.countdownproject.ui.game;
 
-import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.view.View;
 
-import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-public class HomeViewModelFactory implements ViewModelProvider.Factory {
+
+public class GameViewModelFactory implements ViewModelProvider.Factory {
     private Context CurrentContext;
     private View CurrentView;
 
 
-    public HomeViewModelFactory(Context context, View view) {
+    public GameViewModelFactory(Context context, View view) {
         CurrentContext = context;
         CurrentView = view;
     }
@@ -22,7 +20,7 @@ public class HomeViewModelFactory implements ViewModelProvider.Factory {
 
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
-        return (T) new HomeViewModel(CurrentContext, CurrentView);
+        return (T) new GameViewModel(CurrentContext, CurrentView);
     }
 }
 
