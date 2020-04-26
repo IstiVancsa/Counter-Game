@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Random;
 
@@ -108,12 +109,12 @@ public class GameViewModel extends ViewModel {
             HandleHighScore(0);
         }
         else{
-            double exactSeccons = (double)timeLeft / timeInterval - 1;
-            if(exactSeccons >= 0.95){//0.95 because of time needed to run the code
-                Score = (long)(10000 - (exactSeccons - 0.95) * 2500);
+            double exactSeconds = (double)timeLeft / timeInterval - 1;
+            if(exactSeconds >= 0.95){//0.95 because of time needed to run the code
+                Score = (long)(10000 - (exactSeconds - 0.95) * 10000);
             }
             else
-                Score = (long)(10000 - (0.95 - exactSeccons) * 2500);
+                Score = (long)(10000 - (0.95 - exactSeconds) * 10000);
             HandleHighScore((int) Score);
             new AlertDialog.Builder(CurrentContext)
                     .setTitle("Congratulations")
@@ -137,57 +138,58 @@ public class GameViewModel extends ViewModel {
     private void HandleHighScore(int highScore) {
         ArrayList<HighScoreRowModel> highScoreRowModels = LoadHighScores(CurrentContext);
         int position = highScoreRowModels.size();
-        DeleteFileContent();
-        if(highScoreRowModels.size() < 10) {
-            for (int j = highScoreRowModels.size() - 1; j >= 0; j--)
-            {
-                int currentHighScore = Integer.parseInt(highScoreRowModels.get(j).getScore());
-                if(currentHighScore < highScore)
-                    position = j;
-                else
-                    break;
-            }
-            for(int j = highScoreRowModels.size() - 1; j >= position; j--)
-                SaveHighScore(highScoreRowModels.get(j).getScore(), j + 1);
-            SaveHighScore(Integer.toString(highScore), position);
-        }
+        boolean wasOverwritten = false;
+        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
+        Date date = new Date(System.currentTimeMillis());
+
+        if(highScoreRowModels.size() == 0)
+            SaveHighScore(Integer.toString(highScore), 0, formatter.format(date), MODE_PRIVATE);
         else {
-            for (int j = highScoreRowModels.size() - 1; j >= 0; j--)
-            {
-                int currentHighScore = Integer.parseInt(highScoreRowModels.get(j).getScore());
-                if(currentHighScore < highScore)
-                    position = j;
-                else
-                    break;
+            if (!(highScore < Integer.parseInt(highScoreRowModels.get(highScoreRowModels.size() - 1).getScore()))) {
+                for (int j = highScoreRowModels.size() - 1; j >= 0; j--) {
+                    int currentHighScore = Integer.parseInt(highScoreRowModels.get(j).getScore());
+                    if (currentHighScore < highScore)
+                        position = j;
+                    else
+                        break;
+                }
+                if(position < 10) {
+                    for (int i = 0; i < position; i++)
+                        if (!wasOverwritten) {
+                            SaveHighScore(highScoreRowModels.get(i).getScore(), i, highScoreRowModels.get(i).getDateTime(), MODE_PRIVATE);
+                            wasOverwritten = true;
+                        } else
+                            SaveHighScore(highScoreRowModels.get(i).getScore(), i, highScoreRowModels.get(i).getDateTime(), MODE_APPEND);
+                    if (!wasOverwritten) {
+                        SaveHighScore(Integer.toString(highScore), position, formatter.format(date), MODE_PRIVATE);
+                        wasOverwritten = true;
+                    } else
+                        SaveHighScore(Integer.toString(highScore), position, formatter.format(date), MODE_APPEND);
+
+                    for (int j = position; j < highScoreRowModels.size() && j < 9; j++)
+                        if (!wasOverwritten) {
+                            SaveHighScore(highScoreRowModels.get(j).getScore(), j + 1, highScoreRowModels.get(j).getDateTime(), MODE_PRIVATE);
+                            wasOverwritten = true;
+                        } else
+                            SaveHighScore(highScoreRowModels.get(j).getScore(), j + 1, highScoreRowModels.get(j).getDateTime(), MODE_APPEND);
+                }
             }
-            for(int j = highScoreRowModels.size() - 2; j >= position; j--)
-                SaveHighScore(highScoreRowModels.get(j).getScore(), j + 1);
-            SaveHighScore(Integer.toString(highScore), position);
+            else
+                if(highScoreRowModels.size() < 10)
+                    SaveHighScore(Integer.toString(highScore), highScoreRowModels.size(),formatter.format(date), MODE_APPEND);
         }
     }
 
-    private void DeleteFileContent(){
-        PrintWriter writer = null;
-        try {
-            writer = new PrintWriter(FILE_NAME);
-            writer.print("");
-            writer.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void SaveHighScore(String highScore, int position) {
+    private void SaveHighScore(String highScore, int position, String date, int mode) {
         FileOutputStream fos = null;
         try {
-            SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
-            Date date = new Date(System.currentTimeMillis());
 
-            fos = CurrentContext.openFileOutput(FILE_NAME, MODE_APPEND);
+
+            fos = CurrentContext.openFileOutput(FILE_NAME, mode);
             fos.write((position + "___").getBytes());
             fos.flush();
             fos.write((highScore + "___").getBytes());
-            fos.write((formatter.format(date) + "\n").getBytes());
+            fos.write((date + "\n").getBytes());
             Log.i("path", "Saved to " + CurrentContext.getFilesDir() + "/" + FILE_NAME);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -203,9 +205,6 @@ public class GameViewModel extends ViewModel {
                 }
             }
         }
-
-        SimpleDateFormat formatter= new SimpleDateFormat("yyyy-MM-dd 'at' HH:mm:ss z");
-        Date date = new Date(System.currentTimeMillis());
     }
 
     private void StartTimer(){
@@ -277,14 +276,38 @@ public class GameViewModel extends ViewModel {
             String result = stringBuilder.toString();
             String[] lines = result.split("\n");
             for (String line : lines) {
-                String[] words = line.split("___");
-                highScoreRowModels.add(Integer.parseInt(words[0]), new HighScoreRowModel(words[1], words[2]));
+                if(line != "") {
+                    String[] words = line.split("___");
+                    highScoreRowModels.add(Integer.parseInt(words[0]), new HighScoreRowModel(words[1], words[2], Integer.parseInt(words[0])));
+                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        highScoreRowModels = GetOrderedList(highScoreRowModels);
+        return highScoreRowModels;
+    }
+
+    private ArrayList<HighScoreRowModel> GetOrderedList(ArrayList<HighScoreRowModel> myList){
+        Object[] list = myList.toArray();
+        ArrayList<HighScoreRowModel> highScoreRowModels = new ArrayList<>();
+
+
+        for(int i = 0; i < list.length - 1; i++)
+            for(int j = i + 1; j <list.length; j++) {
+                HighScoreRowModel elem1 = (HighScoreRowModel) list[i];
+                HighScoreRowModel elem2 = (HighScoreRowModel) list[j];
+                if (elem1.AmIBigger(elem2) < 0) {
+                    Object aux = list[i];
+                    list[i] = list[j];
+                    list[j] = aux;
+                }
+            }
+
+        for(int i = 0; i < list.length; i++)
+            highScoreRowModels.add((HighScoreRowModel) list[i]);
 
         return highScoreRowModels;
     }

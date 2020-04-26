@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -54,14 +55,38 @@ public class HighScoreViewModel extends ViewModel {
             String result = stringBuilder.toString();
             String[] lines = result.split("\n");
             for (String line : lines) {
-                String[] words = line.split("___");
-                highScoreRowModels.add(Integer.parseInt(words[0]), new HighScoreRowModel(words[1], words[2]));
+                if(line != "") {
+                    String[] words = line.split("___");
+                    highScoreRowModels.add(Integer.parseInt(words[0]), new HighScoreRowModel(words[1], words[2], Integer.parseInt(words[0])));
+                }
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        highScoreRowModels = GetOrderedList(highScoreRowModels);
+        return highScoreRowModels;
+    }
+
+    private ArrayList<HighScoreRowModel> GetOrderedList(ArrayList<HighScoreRowModel> myList){
+        Object[] list = myList.toArray();
+        ArrayList<HighScoreRowModel> highScoreRowModels = new ArrayList<>();
+
+
+        for(int i = 0; i < list.length - 1; i++)
+            for(int j = i + 1; j <list.length; j++) {
+                HighScoreRowModel elem1 = (HighScoreRowModel) list[i];
+                HighScoreRowModel elem2 = (HighScoreRowModel) list[j];
+                if (elem1.AmIBigger(elem2) < 0) {
+                    Object aux = list[i];
+                    list[i] = list[j];
+                    list[j] = aux;
+                }
+            }
+
+        for(int i = 0; i < list.length; i++)
+            highScoreRowModels.add((HighScoreRowModel) list[i]);
 
         return highScoreRowModels;
     }

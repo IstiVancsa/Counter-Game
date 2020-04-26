@@ -30,8 +30,9 @@ public class HighScoreListAdapter extends ArrayAdapter<HighScoreRowModel> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         String score = getItem(position).getScore();
         String dateTime = getItem(position).getDateTime();
+        int myPosition = getItem(position).getPosition();
 
-        HighScoreRowModel highScoreRowModel = new HighScoreRowModel(score, dateTime);
+        HighScoreRowModel highScoreRowModel = new HighScoreRowModel(score, dateTime, myPosition);
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);
 

@@ -1,9 +1,11 @@
 package com.example.countdownproject.ui.share;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -13,21 +15,46 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.countdownproject.R;
+import com.example.countdownproject.ui.highScore.HighScoreRowModel;
+
+import java.util.ArrayList;
 
 public class ShareFragment extends Fragment {
 
     private ShareViewModel shareViewModel;
+    private Button shareAsMessageButton;
+    private Button shareAsPostButton;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        shareViewModel =
-                ViewModelProviders.of(this).get(ShareViewModel.class);
+
         View root = inflater.inflate(R.layout.fragment_share, container, false);
-        final TextView textView = root.findViewById(R.id.text_share);
-        shareViewModel.getText().observe(this, new Observer<String>() {
+
+        shareViewModel = ViewModelProviders.of(this, new ShareViewModelFactory(getContext())).get(ShareViewModel.class);
+        shareAsMessageButton = root.findViewById(R.id.shareAsMessageButton);
+        shareAsPostButton = root.findViewById(R.id.shareAsPostButton);
+
+
+        shareAsMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onChanged(@Nullable String s) {
-                textView.setText(s);
+            public void onClick(View v) {
+                ArrayList<HighScoreRowModel> highScoreRowModels = shareViewModel.LoadHighScores();
+                String shareText = "Hy guys!\nCheck out my high score on this amazing app!\nGo get the app and try to get better scores than me!\n";
+                for (HighScoreRowModel elem: highScoreRowModels) {
+                    shareText += "      " + elem.toString() + "\n";
+                }
+
+                Intent SharingIntent = new Intent(Intent.ACTION_SEND);
+                SharingIntent.setType("text/plain");
+                SharingIntent.putExtra(Intent.EXTRA_TEXT, shareText);
+                startActivity(Intent.createChooser(SharingIntent, "Share high scores via"));
+            }
+        });
+
+        shareAsPostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
         return root;
