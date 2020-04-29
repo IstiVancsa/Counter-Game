@@ -23,7 +23,6 @@ public class ShareFragment extends Fragment {
 
     private ShareViewModel shareViewModel;
     private Button shareAsMessageButton;
-    private Button shareAsPostButton;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -32,7 +31,6 @@ public class ShareFragment extends Fragment {
 
         shareViewModel = ViewModelProviders.of(this, new ShareViewModelFactory(getContext())).get(ShareViewModel.class);
         shareAsMessageButton = root.findViewById(R.id.shareAsMessageButton);
-        shareAsPostButton = root.findViewById(R.id.shareAsPostButton);
 
 
         shareAsMessageButton.setOnClickListener(new View.OnClickListener() {
@@ -51,12 +49,6 @@ public class ShareFragment extends Fragment {
             }
         });
 
-        shareAsPostButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
         return root;
     }
 }
